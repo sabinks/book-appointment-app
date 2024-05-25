@@ -164,6 +164,7 @@ const user = {
 }
 const navigation = [
     { name: 'Home', href: '/', current: true, route: 'home', requiresAuth: false, component: 'Home' },
+    { name: 'Book Appointment', href: '/book-appointment', current: false, route: 'book-component', requiresAuth: false, component: 'Book Appointment' },
     { name: 'About', href: '/about', current: false, route: 'about', requiresAuth: false, component: 'About' },
     { name: 'Contact', href: '/contact', current: false, route: 'contact', requiresAuth: true, component: 'Contact' },
 ]
