@@ -3,9 +3,15 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use Inertia\Inertia;
+use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use Spatie\Permission\Models\Role;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Password;
+use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Support\Facades\Validator;
 
 class AuthController extends Controller
@@ -56,5 +62,65 @@ class AuthController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
         return redirect('/login');
+    }
+    public function forgotPassword(Request $request)
+    {
+        try {
+            $request->validate([
+                'email' => 'required|email|lowercase|regex:/^\S*$/u',
+            ]);
+            $status = Password::sendResetLink(
+                $request->only('email')
+            );
+            session()->flush();
+            if ($status == 'passwords.sent') {
+                return redirect('/login')
+                    ->with('message', 'Password reset link sent, please check your email address for password reset link!');
+                // return Inertia::render('ForgotPassword', [
+                //     'message' => 'Password reset link sent, please check your email address for password reset link!'
+                // ]);
+            } else {
+                return redirect('/login')->with('message', 'Password Forgot: Error occured!');
+                // return Inertia::render('ForgotPassword', [
+                //     'message' => 'Password Forgot: Error occured!'
+                // ]);
+            }
+        } catch (\Throwable $th) {
+            // throw $th;
+            Log::info(json_encode($th));
+        }
+    }
+    public function resetPassword(Request $request)
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                'token' => 'required',
+                'email' => 'required|email|lowercase|regex:/^\S*$/u',
+                'password' => 'required|min:8'
+            ]);
+            if ($validator->fails()) {
+
+                return response($validator->errors(), 422);
+            }
+            $status = Password::reset(
+                $request->only('email', 'password', 'token'),
+                function ($user, $password) {
+                    $user->forceFill([
+                        'password' => Hash::make($password)
+                    ])->setRememberToken(Str::random(60));
+
+                    $user->save();
+                    event(new PasswordReset($user));
+                }
+            );
+            if ($status == 'passwords.reset') {
+                return redirect('/login')->with('message', 'Password reset completed, please login using new credentials!');
+            } else {
+                return redirect('/login')->with('message', 'Password Reset: Error occured!');
+            }
+        } catch (\Throwable $th) {
+            // throw $th;
+            Log::info(json_encode($th));
+        }
     }
 }

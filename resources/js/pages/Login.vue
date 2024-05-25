@@ -43,7 +43,8 @@ const handleSubmit = () => {
                                 Me</label>
                         </div>
                     </div>
-                    <a href="#" class="font-semibold text-indigo-600 hover:text-indigo-500">Forgot password?</a>
+                    <a href="/forgot-password" class="font-semibold text-indigo-600 hover:text-indigo-500">Forgot
+                        password?</a>
                 </div>
                 <div class="space-y-2">
                     <button type="submit" :disabled="form.processing"

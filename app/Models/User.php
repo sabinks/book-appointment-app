@@ -3,10 +3,12 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Support\Facades\Config;
+use Spatie\Permission\Traits\HasRoles;
+use Illuminate\Notifications\Notifiable;
+use App\Notifications\ResetPasswordNotification;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
-use Illuminate\Notifications\Notifiable;
-use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable
 {
@@ -46,4 +48,19 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
+    public function sendPasswordResetNotification($token)
+    {
+        $url = Config::get('app.url') . '/reset-password?token=' . $token;
+        $this->notify(new ResetPasswordNotification($url));
+    }
+
+    public function scopeActive($query)
+    {
+        return  $query->where('is_active', true);
+    }
+    // public function notes($query)
+    // {
+    //     return $query->hasMany(ClientNote::class);
+    // }
 }
